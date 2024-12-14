@@ -1,0 +1,167 @@
+---
+title: "tidyverse_un_clj"
+output: html_notebook
+---
+
+1.  Using the `read_csv()` function, read the GDP dataset into your notebook as a tibble called `gdp_df`. After reading it in, inspect the first 10 rows and then inspect the last 10 rows.
+
+```{r}
+library(tidyverse)
+library(dplyr)
+
+
+```
+
+Loads in tidyverse package and dplyr package
+
+```{r}
+gdp_df <- read_csv('data/gdp_per_capita.csv')
+
+head(gdp_df, 10)
+
+tail(gdp_df, 10)
+```
+
+Reads in dataframe as tibble, displays the first and last 10 rows
+
+2.  Drop the 'Value Footnotes' column, and rename the remaining columns to 'Country', 'Year', and 'GDP_Per_Capita'.
+
+```{r}
+gdp_df <- gdp_df |> 
+  select(-`Value Footnotes`)
+```
+
+Removes 'value footnotes' column
+
+```{r}
+gdp_df <- gdp_df |> 
+  rename(Country=`Country or Area`, `GDP Per Capita`=Value)
+```
+
+Renames the 1st and 3rd columns to 'Country' and 'GDP Per Capita', respectively
+
+```{r}
+ggplot(gdp_df, aes(x = Year, y = `GDP Per Capita`)) +
+  geom_col() +
+  xlab('Year') +
+  ylab('GDP Per Capita')
+```
+
+3.  Which years are represented in this dataset? How many observations are there per year? Make a plot to view the number of observations per year.
+
+First plot of gdp per capita by year. The years 1990 to 2021 are represented in this dataset.
+
+```{r}
+gdp_df |> 
+  select(Year) |> 
+  summarise(`last year` = first(Year),
+            `first year` = last(Year))
+```
+
+```{r}
+ggplot(gdp_df, aes(x = Country, y = `GDP Per Capita`)) +
+  geom_col() +
+  theme(axis.text.x = element_blank()) +
+  xlab('Countries') +
+  ylab('GDP Per Capita')
+```
+
+4.  How many countries are represented in this dataset? Which countries have the fewest observations?
+
+    242 countries, Countries listed have the least observations
+
+```{r}
+length(unique(gdp_df$Country))
+
+gdp_df |> 
+  count(Country) |> 
+  arrange((n)) |> 
+  head(10)
+```
+
+5.  Create a new tibble by subsetting `gdp_df` to just the year 2021. Call this new tibble `gdp_2021`
+
+6.  Use `summary()` to find the summary statistics for GDP per capita in 2021..
+
+```{r}
+gdp_2021 <- gdp_df |> 
+  filter(Year == 2021)
+
+summary(gdp_2021)
+```
+
+7.  Create a histogram of GDP Per Capita numbers for 2021 (you may wish to adjust the number of bins for your histogram).
+
+```{r}
+ggplot(gdp_2021, aes(x=GDP_Per_Capita)) +
+  geom_histogram(bins = 20)
+```
+
+8.  Find the top 5 counties and bottom 5 countries by GDP per capita in 2021.
+
+```{r}
+head(gdp_2021, 5)
+tail(gdp_2021, 5)
+```
+
+9.  Now, return to the full dataset, `gdp_df`. Pivot the data for 1990 and 2021 (using `pivot_wider()` function) so that each row corresponds to a country, each column corresponds to a year, and the values in the table give the GDP_Per_Capita amount. Drop any rows that are missing values for either 1990 or 2021. Save the result to a tibble named `gdp_pivoted`.
+
+```{r}
+gdp_pivoted <- gdp_df |> 
+  pivot_wider(names_from=Year,
+              values_from =GDP_Per_Capita)
+
+gdp_pivoted <- gdp_pivoted[, -c(3:33)]
+gdp_pivoted <- gdp_pivoted |> 
+  drop_na()
+
+gdp_pivoted <- gdp_pivoted |> 
+  mutate(percent_change = 100 * (gdp_pivoted[, 2] - gdp_pivoted[, 3])/gdp_pivoted[, 3])
+```
+
+10. Create a new column in `gdp_pivoted` named `Percent_Change`. This column should contain the percent change in GDP_Per_Capita from 1990 to 2021. Hint: Percent change is calculated as 100\*(New Value - Old Value) / Old Value.
+
+```{r}
+nrow(gdp_pivoted |> 
+  filter(percent_change < 0))
+
+head(gdp_pivoted |> 
+  arrange(desc(percent_change)), 2)
+```
+
+11. How many countries experienced a negative percent change in GDP per capita from 1990 to 2021?
+
+    19 Countries
+
+12. Which country had the highest % change in GDP per capita? Create a line plot showing these country's GDP per capita for all years for which you have data. Put both line charts on the same plot.
+
+    Equatorial Guinea has the highest % change.
+
+```{r}
+gdp_hi <- gdp_df |> 
+  filter(Country=='Equatorial Guinea')
+gdp_hi2 <- gdp_df |> 
+  filter(Country=='China')
+```
+
+```{r}
+ggplot() +
+  geom_line(data=gdp_hi,
+            aes(x=Year,
+                y=GDP_Per_Capita, 
+                color='Equatorial Guinea')) +
+  geom_line(data=gdp_hi2,
+            aes(x=Year,
+                y=GDP_Per_Capita,
+                color='China'))
+```
+
+13. Read in continents.csv contained in the `data` folder into a new tibble called `continents`. We will be using this tibble to add a new column to our dataset.
+
+```{r}
+continents <- read_csv('data/continents.csv')
+```
+
+```{r}
+
+```
