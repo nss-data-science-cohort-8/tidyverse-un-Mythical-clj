@@ -35,7 +35,7 @@ Removes 'value footnotes' column
 
 ```{r}
 gdp_df <- gdp_df |> 
-  rename(Country=`Country or Area`, `GDP Per Capita`=Value)
+  rename(Country=`Country or Area`,`GDP Per Capita`=Value)
 ```
 
 Renames the 1st and 3rd columns to 'Country' and 'GDP Per Capita', respectively
@@ -93,7 +93,7 @@ summary(gdp_2021)
 7.  Create a histogram of GDP Per Capita numbers for 2021 (you may wish to adjust the number of bins for your histogram).
 
 ```{r}
-ggplot(gdp_2021, aes(x=GDP_Per_Capita)) +
+ggplot(gdp_2021, aes(x=`GDP Per Capita`)) +
   geom_histogram(bins = 20)
 ```
 
@@ -109,7 +109,7 @@ tail(gdp_2021, 5)
 ```{r}
 gdp_pivoted <- gdp_df |> 
   pivot_wider(names_from=Year,
-              values_from =GDP_Per_Capita)
+              values_from =`GDP Per Capita`)
 
 gdp_pivoted <- gdp_pivoted[, -c(3:33)]
 gdp_pivoted <- gdp_pivoted |> 
@@ -148,11 +148,11 @@ gdp_hi2 <- gdp_df |>
 ggplot() +
   geom_line(data=gdp_hi,
             aes(x=Year,
-                y=GDP_Per_Capita, 
+                y=`GDP Per Capita`, 
                 color='Equatorial Guinea')) +
   geom_line(data=gdp_hi2,
             aes(x=Year,
-                y=GDP_Per_Capita,
+                y=`GDP Per Capita`,
                 color='China'))
 ```
 
@@ -162,6 +162,128 @@ ggplot() +
 continents <- read_csv('data/continents.csv')
 ```
 
-```{r}
+14. Merge gdp_df and continents. Keep only the countries that appear in both data frames. Save the result back to gdp_df.
 
+```{r}
+gdp_df <- gdp_df |> 
+  inner_join(continents) |> 
+  relocate(Continent, .before = Country) |> 
+  mutate(Year = as.character(Year))
 ```
+
+15. Determine the number of countries per continent. Create a bar chart showing this.
+
+```{r}
+cont_count <- gdp_df |> 
+  group_by(Continent) |> 
+  summarize(count = n())
+print(cont_count)
+```
+
+```{r}
+ggplot(cont_count, aes(x=Continent, y=`count`, fill=Continent)) +
+  geom_col() +
+  scale_fill_manual(values = c("#6C2CDB",
+                               "#3D59DB",
+                               "#86525B",
+                               "#5C5740",
+                               "#4A405C",
+                               "#40485C")) +
+  xlab('Continents') +
+  ylab('Countries per Continent')
+```
+
+16. Create a boxplot showing GDP per capita in 2021 split out by continent. What do you notice?
+
+    Asia has the widest interquartile range while Europe has the highest outliers. South America has no outliers which I find interesting.
+
+    ```{r}
+    gdp_2021 <- gdp_df |> 
+      filter(Year == 2021) |> 
+      group_by(Continent)
+    ```
+
+```{r}
+ggplot(gdp_2021, aes(x = Continent, y = `GDP Per Capita`, fill=Continent)) + 
+
+  geom_boxplot() +
+  scale_fill_manual(values = c("#6C2CDB",
+                               "#3D59DB",
+                               "#86525B",
+                               "#5C5740",
+                               "#4A405C",
+                               "#40485C"))
+```
+
+17. Read life_expectancy.csv into a tibble named life_expectancy. Do not modify the csv file in order to read this data in.
+
+```{r}
+life_expectancy <- read_csv('data/life_expectancy.csv', skip=4)
+```
+
+18. Drop the Country Code, Indicator Name, and Indicator Code columns. Then use `pivot_longer` to convert your data from wide to long. That is, instead of having one row per country and multiple colums per year, we want to have multiple rows per country and a single column for year. After melting, rename the columns to `Country`, `Year`, and `Life_Expectancy`.
+
+```{r}
+life_expectancy <- life_expectancy |> 
+  select(-c(`Country Code`,
+            `Indicator Name`,
+            `Indicator Code`,
+            `2023`,
+            `...69`))
+```
+
+```{r}
+life_expectancy <- life_expectancy |> 
+  pivot_longer(!`Country Name`)
+```
+
+```{r}
+life_expectancy <- life_expectancy |> 
+  rename(Country=`Country Name`,
+         Year=name,
+         Life_Expectancy=value)
+```
+
+19. What was the first country with a life expectancy to exceed 80?
+
+    Japan in 1996 was the first year, hitting 80.2
+
+```{r}
+life_expectancy |> 
+  group_by(Year) |> 
+  filter(Life_Expectancy >= 80) |> 
+  slice(1) |>
+  head(1)
+```
+
+20. Merge `gdp_df` and `life_expectancy`, keeping all countries and years that appear in both tibbles. Save the result to a new tibble named `gdp_le`. If you get any errors in doing this, read them carefully and correct them. Look at the first five rows of your new data frame to confirm it merged correctly. Also, check the last five rows to make sure the data is clean and as expected.
+
+```{r}
+gdp_le <- gdp_df |> 
+  right_join(life_expectancy) 
+```
+
+```{r}
+head(gdp_le, 5) 
+```
+
+```{r}
+tail(gdp_le, 5)
+```
+
+21. Create a new tibble, named `gdp_le_2021` by extracting data for the year 2021 from `gdp_le`. How many countries have a life expectancy of at least 80 in 2021?
+
+There are 40 countries whose life expectancy exceeds 80 in 2021
+
+```{r}
+gdp_le_2021 <- gdp_le |> 
+  filter(Year == 2021)
+```
+
+```{r}
+gdp_le_2021 |> 
+  filter(Life_Expectancy >= 80) |> 
+  count()
+```
+
+22. Find the countries that had the top 3 largest GDP per capita figures for 2021. Create a plot showing the change in life expectancy over time for these three countries. This plot should be faceted so that each country is contained in its own figure.
