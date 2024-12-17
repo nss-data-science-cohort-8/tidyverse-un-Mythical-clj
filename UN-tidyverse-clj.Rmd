@@ -9,7 +9,7 @@ output: html_notebook
 library(tidyverse)
 library(dplyr)
 library(corrr)
-
+library(extrafont)
 ```
 
 Loads in tidyverse package and dplyr package
@@ -17,9 +17,11 @@ Loads in tidyverse package and dplyr package
 ```{r}
 gdp_df <- read_csv('data/gdp_per_capita.csv')
 
-head(gdp_df, 10)
+gdp_df |> 
+  head(10)
 
-tail(gdp_df, 10)
+gdp_df |> 
+  tail(10)
 ```
 
 Reads in dataframe as tibble, displays the first and last 10 rows
@@ -47,11 +49,16 @@ year_count <- gdp_df |>
 print(year_count)
 ```
 
+Counts the frequency of occurrences of observations in each year and returns a tibble with that information.
+
+Creates a scatter plot visualizing the tibble created above.
+
 ```{r}
 ggplot(year_count, aes(x = Year, y = n)) +
   geom_point() +
   xlab('Year') +
-  ylab('Observations')
+  ylab('Observations') +
+  labs(title = 'Amount of observations per year')
 ```
 
 3.  Which years are represented in this dataset? How many observations are there per year? Make a plot to view the number of observations per year.
@@ -61,8 +68,8 @@ The years 1990 to 2021 are represented in this dataset.
 ```{r}
 gdp_df |> 
   select(Year) |> 
-  summarize(`last year` = first(Year),
-            `first year` = last(Year))
+  summarize(`first year` = last(Year),
+            `last year` = first(Year))
 ```
 
 4.  How many countries are represented in this dataset? Which countries have the fewest observations?
@@ -93,7 +100,8 @@ summary(gdp_2021)
 
 ```{r}
 ggplot(gdp_2021, aes(x=`GDP Per Capita`)) +
-  geom_histogram(bins = 20)
+  geom_histogram(bins = 20, fill = "#86525B") +
+  labs(title = 'Frequency of GDP Per Capita')
 ```
 
 8.  Find the top 5 counties and bottom 5 countries by GDP per capita in 2021.
@@ -120,7 +128,7 @@ gdp_pivoted <- gdp_pivoted |>
   drop_na()
 
 gdp_pivoted <- gdp_pivoted |> 
-  mutate(percent_change = 100 * (gdp_pivoted$`2021` - gdp_pivoted$`1990`)/gdp_pivoted$`1990`)
+  mutate(percent_change = 100 * (`2021` - `1990`)/`1990`)
 ```
 
 10. Create a new column in `gdp_pivoted` named `Percent_Change`. This column should contain the percent change in GDP_Per_Capita from 1990 to 2021. Hint: Percent change is calculated as 100\*(New Value - Old Value) / Old Value.
@@ -157,7 +165,8 @@ ggplot() +
   geom_line(data=gdp_hi2,
             aes(x=Year,
                 y=`GDP Per Capita`,
-                color='China'))
+                color='China')) +
+  labs(title = 'GDP Per Capita by Year for the two highest in\n percent change from 1990 to 2021')
 ```
 
 13. Read in continents.csv contained in the `data` folder into a new tibble called `continents`. We will be using this tibble to add a new column to our dataset.
@@ -194,12 +203,13 @@ ggplot(cont_count, aes(x=Continent, y=`count`, fill=Continent)) +
                                "#4A405C",
                                "#40485C")) +
   xlab('Continents') +
-  ylab('Countries per Continent')
+  ylab('Countries per Continent') +
+  labs(title = 'Amount of Countries in each Continent')
 ```
 
 16. Create a boxplot showing GDP per capita in 2021 split out by continent. What do you notice?
 
-    Asia has the widest interquartile range while Europe has the highest outliers. South America has no outliers which I find interesting.
+    Asia has the widest interquartile range, with a skewed median while Europe has the highest outliers. South America has no outliers which I find interesting.
 
     ```{r}
     gdp_2021 <- gdp_df |> 
@@ -209,14 +219,14 @@ ggplot(cont_count, aes(x=Continent, y=`count`, fill=Continent)) +
 
 ```{r}
 ggplot(gdp_2021, aes(x = Continent, y = `GDP Per Capita`, fill=Continent)) + 
-
   geom_boxplot() +
   scale_fill_manual(values = c("#6C2CDB",
                                "#3D59DB",
                                "#86525B",
                                "#5C5740",
                                "#4A405C",
-                               "#40485C"))
+                               "#40485C")) +
+  labs(title = 'GDP Per Capita of each Continent')
 ```
 
 17. Read life_expectancy.csv into a tibble named life_expectancy. Do not modify the csv file in order to read this data in.
@@ -269,11 +279,11 @@ gdp_le <- gdp_df |>
 ```
 
 ```{r}
-head(gdp_le, 5) 
-```
+gdp_le |> 
+  head(5)
 
-```{r}
-tail(gdp_le, 5)
+gdp_le |> 
+  tail(5)
 ```
 
 21. Create a new tibble, named `gdp_le_2021` by extracting data for the year 2021 from `gdp_le`. How many countries have a life expectancy of at least 80 in 2021?
@@ -308,7 +318,9 @@ gdp_top3 <- gdp_le |>
 ```{r}
 ggplot(gdp_top3, aes(x=Year, y=Life_Expectancy, group=1)) +
   geom_line() +
-  facet_grid(~ Country)
+  facet_grid(~ Country) +
+  ylab('Life Expectancy') +
+  labs(title = 'Top 3 countries\' Life Expectancies\n from 1960 to 2020')
 ```
 
 23. Create a scatter plot of Life Expectancy vs GDP per Capita for the year 2021. What do you notice?
@@ -317,18 +329,25 @@ As the demographic ages past 75, the gdp per capita starts to rise. Countries wi
 
 ```{r}
 ggplot(gdp_le_2021, aes(x=Life_Expectancy, y=`GDP Per Capita`)) +
-  geom_point()
+  geom_point() +
+  xlab('Life Expectancy') +
+  labs(title = 'Change in GDP Per Capita by Life Expectancy') 
 ```
 
 24. Find the correlation between Life Expectancy and GDP per Capita for the year 2021. What is the meaning of this number?
 
+This number signifies that there is a strong positive relationship between an increase of gdp and an increase in life expectancy. Whether one causes the other or a third factor influences both is unknown.
+
 ```{r}
 gdp_le_2021 |> 
   select(`GDP Per Capita`, Life_Expectancy) |> 
-  correlate()
+  drop_na(c('GDP Per Capita', Life_Expectancy)) |> 
+  cor()
 ```
 
 25. Add a column to `gdp_le_2021` and calculate the logarithm of GDP per capita. Find the correlation between the log of GDP per capita and life expectancy. How does this compare to the calculation in the previous part? Look at a scatter plot to see if the result of this calculation makes sense.
+
+Because this is a log scale, the correlation is stronger as the data are now weighed in an evenly distributed way. Since it is a log scale, it appears that their relationship is stronger.
 
 ```{r}
 gdp_le_2021 <- gdp_le_2021 |> 
@@ -347,5 +366,10 @@ gdp_le_2021 |>
 
 ```{r}
 ggplot(gdp_le_2021, aes(x=Life_Expectancy, y=log_gdp)) +
-  geom_point()
+  geom_point() +
+  geom_smooth(method = 'lm', color='red') +
+  xlab('Life Expectancy') +
+  ylab('logarithm of GDP Per Capita') +
+  labs(title = 'Change in the log of GDP Per Capita by Life Expectancy') +
+  theme(text = element_text(family = "Merriweather-Italic"))
 ```
