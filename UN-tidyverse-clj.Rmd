@@ -329,7 +329,7 @@ As the demographic ages past 75, the gdp per capita starts to rise. Countries wi
 
 ```{r}
 ggplot(gdp_le_2021, aes(x=Life_Expectancy, y=`GDP Per Capita`)) +
-  geom_point() +
+  geom_point(color='#40485C') +
   xlab('Life Expectancy') +
   labs(title = 'Change in GDP Per Capita by Life Expectancy') 
 ```
@@ -362,12 +362,9 @@ gdp_le_2021 |>
 ```
 
 ```{r}
-```
-
-```{r}
 ggplot(gdp_le_2021, aes(x=Life_Expectancy, y=log_gdp)) +
-  geom_point() +
-  geom_smooth(method = 'lm', color='red') +
+  geom_point(color='#40485C') +
+  geom_smooth(method = 'lm', color='#86525B') +
   xlab('Life Expectancy') +
   ylab('logarithm of GDP Per Capita') +
   labs(title = 'Change in the log of GDP Per Capita by Life Expectancy') +
